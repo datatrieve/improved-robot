@@ -1,23 +1,30 @@
 import os
-import logging
-from aiogram import Bot, Dispatcher, executor, types
+import asyncio
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.filters import CommandStart
 
-API_TOKEN = os.getenv("BOT_TOKEN")
-if not API_TOKEN:
-    raise RuntimeError("BOT_TOKEN env variable is missing!")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-logging.basicConfig(level=logging.INFO)
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN environment variable is not set")
 
-bot = Bot(token=API_TOKEN)
-dp  = Dispatcher(bot)
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
 
-@dp.message_handler(commands=['start', 'help'])
-async def welcome(message: types.Message):
-    await message.reply("Hi!\nI’m EchoBot.\nSend me anything and I’ll echo it back.")
+@dp.message(CommandStart())
+async def start(message: Message):
+    await message.answer("👋 Hi! Send me anything and I’ll echo it.")
 
-@dp.message_handler()
-async def echo(message: types.Message):
-    await message.answer(message.text)
+@dp.message()
+async def echo(message: Message):
+    if message.text:
+        await message.answer(message.text)
+    else:
+        await message.answer("I can only echo text messages 🙂")
 
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
